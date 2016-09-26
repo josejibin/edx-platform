@@ -37,6 +37,7 @@ class @Problem
     @submitButton.click @submit_fd
     @hintButton = @$('.action .hint-button')
     @hintButton.click @hint_button
+    @hintNotification = @$('.notification-hint')
     @resetButton = @$('.action .reset')
     @resetButton.click @reset
     @showButton = @$('.action .show')
@@ -460,7 +461,6 @@ class @Problem
   save_internal: =>
     Logger.log 'problem_save', @answers
     $.postWithPrefix "#{@url}/problem_save", @answers, (response) =>
-      debugger
       saveMessage = response.msg
       if response.success
         @el.trigger('contentChanged', [@id, response.html])
@@ -468,7 +468,6 @@ class @Problem
         @clear_all_notifications()
         @saveNotification.show()
         @focus_on_save_notification()
-#        @render(response.html, @focus_on_save_notification)
       else
         @gentle_alert saveMessage
 
@@ -871,8 +870,23 @@ class @Problem
       next_index = parseInt(hint_index) + 1
     $.postWithPrefix "#{@url}/hint_button", hint_index: next_index, input_id: @id, (response) =>
       if response.success
-        @render(response.html, @focus_on_hint_notification)
-        hint_container = @.$('.problem-hint')
+        hint_msg_container = @.$('.problem-hint .notification-message')
         hint_container.attr('hint_index', response.hint_index)
+        hint_msg_container.html(response.msg)
+        # Update any Mathjax entries
+        MathJax.Hub.Queue [
+          'Typeset'
+          MathJax.Hub
+          hint_container[0]
+        ]
+        @hintNotification.show()
+        # Enable/Disable the next hint button
+        if response.more_hints
+          @el.find('.notification-hint .hint-button').removeAttr 'disabled'
+          @hintButton.removeAttr 'disabled'
+        else
+          @el.find('.notification-hint .hint-button').attr({'disabled': 'disabled'})
+          @hintButton.attr({'disabled': 'disabled'})
+        @focus_on_hint_notification()
       else
         @gentle_alert response.msg

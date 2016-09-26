@@ -131,7 +131,7 @@ class ProblemHintTest(ProblemsTest, EventsTestMixin):
         problem_page = ProblemPage(self.browser)
 
         # The single visible Hint button should be enabled.
-        self.assertEqual([None], problem_page.get_hint_button_disabled_attr())
+        self.assertEqual([None, None], problem_page.get_hint_button_disabled_attr())
 
         # The hint button rotates through multiple hints
         problem_page.click_hint()

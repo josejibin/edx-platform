@@ -606,17 +606,23 @@ class CapaMixin(CapaFields):
         event_info['hint_text'] = get_inner_html_from_xpath(demand_hints[hint_index])
         self.runtime.publish(self, 'edx.problem.hint.demandhint_displayed', event_info)
 
+        # hint_index is the index of the last hint that will be displayed in this rendering,
+        # so add 1 to check if others exist.
+        demand_hint_possible = len(demand_hints) > 0
+        should_enable_next_hint = demand_hint_possible and hint_index + 1 < len(demand_hints)
+
         # We report the index of this hint, the client works out what index to use to get the next hint
         return {
             'success': True,
             'hint_index': hint_index,
-            'html': self.get_problem_html(encapsulate=False, demand_hint_text=total_text, hint_index=hint_index)
+            'more_hints': should_enable_next_hint,
+            'msg': total_text,
+            'html': self.get_problem_html(encapsulate=False, hint_index=hint_index)
         }
 
     def get_problem_html(self, encapsulate=True,
-                         demand_hint_text=None,
-                         hint_index=0,
-                         submit_notification=False):
+                         submit_notification=False,
+                         hint_index=0):
         """
         Return html for the problem.
 
@@ -624,7 +630,6 @@ class CapaMixin(CapaFields):
         and state.
 
         encapsulate (bool): if True (the default) embed the html in a problem <div>
-        demand_hint_text (str): the demand hint text (optional, default is None)
         hint_index (int): the index of the last demand hint being shown (optional, default is 0)
         submit_notification (bool): True if the submit notification should be added
         """
@@ -652,8 +657,6 @@ class CapaMixin(CapaFields):
         # If demand hints are available, emit hint button and div.
         demand_hints = self.lcp.tree.xpath("//problem/demandhint/hint")
         demand_hint_possible = len(demand_hints) > 0
-        # hint_index is the index of the last hint that will be displayed in this rendering,
-        # so add 1 to check if others exist.
         should_enable_next_hint = demand_hint_possible and hint_index + 1 < len(demand_hints)
 
         answer_notification_type, answer_notification_message = self._get_answer_notification(
@@ -673,7 +676,6 @@ class CapaMixin(CapaFields):
             'attempts_allowed': self.max_attempts,
             'demand_hint_possible': demand_hint_possible,
             'should_enable_next_hint': should_enable_next_hint,
-            'hint_notification_message': demand_hint_text,
             'answer_notification_type': answer_notification_type,
             'answer_notification_message': answer_notification_message,
         }
