@@ -17,6 +17,7 @@ from courseware.model_data import FieldDataCache
 from courseware.module_render import get_module_for_descriptor
 from courseware.models import StudentModule
 from edxmako.shortcuts import render_to_string
+from grades.scores import weighted_score
 from grades.signals.signals import SCORE_CHANGED
 from lang_pref import LANGUAGE_KEY
 from request_cache import get_request
@@ -285,9 +286,10 @@ def reset_student_attempts(course_id, student, module_state_key, requesting_user
                 field_data_cache=cache,
                 course_key=course_id
             )
+            _, points_possible = weighted_score(0, module.max_score(), getattr(module, 'weight', None))
             SCORE_CHANGED.send(
                 sender=None,
-                points_possible=module.max_score(),
+                points_possible=points_possible,
                 points_earned=0,
                 user=student,
                 course_id=course_id,
