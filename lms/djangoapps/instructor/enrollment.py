@@ -13,12 +13,14 @@ from django.core.mail import send_mail
 from django.utils.translation import override as override_language
 
 from course_modes.models import CourseMode
-from student.models import CourseEnrollment, CourseEnrollmentAllowed
+from courseware.model_data import FieldDataCache
+from courseware.module_render import get_module_for_descriptor
 from courseware.models import StudentModule
 from edxmako.shortcuts import render_to_string
 from grades.signals.signals import SCORE_CHANGED
 from lang_pref import LANGUAGE_KEY
-
+from request_cache import get_request
+from student.models import CourseEnrollment, CourseEnrollmentAllowed
 from submissions import api as sub_api  # installed from the edx-submissions repository
 from student.models import anonymous_id_for_user
 from openedx.core.djangoapps.user_api.models import UserPreference
@@ -270,9 +272,22 @@ def reset_student_attempts(course_id, student, module_state_key, requesting_user
     if delete_module:
         module_to_reset.delete()
         if block and block.has_score:
+            cache = FieldDataCache.cache_for_descriptor_descendents(
+                course_id=course_id,
+                user=student,
+                descriptor=block,
+                depth=0
+            )
+            module = get_module_for_descriptor(
+                user=student,
+                request=get_request(),
+                descriptor=block,
+                field_data_cache=cache,
+                course_key=course_id
+            )
             SCORE_CHANGED.send(
                 sender=None,
-                points_possible=block.max_score,
+                points_possible=module.max_score(),
                 points_earned=0,
                 user=student,
                 course_id=course_id,
