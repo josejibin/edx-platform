@@ -373,7 +373,7 @@ class @Problem
           if @el.hasClass 'showed'
             @el.removeClass 'showed'
         else
-          @saveNotification.remove()
+          @saveNotification.hide()
           @gentle_alert response.success
       Logger.log 'problem_graded', [@answers, response.contents], @id
 
@@ -445,7 +445,7 @@ class @Problem
 
   clear_all_notifications: =>
     @submitNotification.remove()
-    @saveNotification.remove()
+    @saveNotification.hide()
 
   gentle_alert: (msg) =>
     @el.find('.notification-gentle-alert .notification-message').html(msg)
@@ -460,10 +460,15 @@ class @Problem
   save_internal: =>
     Logger.log 'problem_save', @answers
     $.postWithPrefix "#{@url}/problem_save", @answers, (response) =>
+      debugger
       saveMessage = response.msg
       if response.success
         @el.trigger('contentChanged', [@id, response.html])
-        @render(response.html, @focus_on_save_notification)
+        @el.find('.notification-save .notification-message').html(saveMessage)
+        @clear_all_notifications()
+        @saveNotification.show()
+        @focus_on_save_notification()
+#        @render(response.html, @focus_on_save_notification)
       else
         @gentle_alert saveMessage
 
@@ -519,7 +524,7 @@ class @Problem
           one_text_input_filled = true
         if bind
           $(text_field).on 'input', (e) =>
-            @saveNotification.remove()
+            @saveNotification.hide()
             @submitAnswersAndSubmitButton()
             return
           return
@@ -533,7 +538,7 @@ class @Problem
           checked = true
         if bind
           $(checkbox_or_radio).on 'click', (e) =>
-            @saveNotification.remove()
+            @saveNotification.hide()
             @submitAnswersAndSubmitButton()
             return
           return
@@ -547,7 +552,7 @@ class @Problem
         answered = false
       if bind
         $(select_field).on 'change', (e) =>
-          @saveNotification.remove()
+          @saveNotification.hide()
           @submitAnswersAndSubmitButton()
           return
         return
