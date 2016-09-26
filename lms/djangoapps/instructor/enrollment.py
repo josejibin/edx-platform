@@ -273,28 +273,7 @@ def reset_student_attempts(course_id, student, module_state_key, requesting_user
     if delete_module:
         module_to_reset.delete()
         if block and block.has_score:
-            cache = FieldDataCache.cache_for_descriptor_descendents(
-                course_id=course_id,
-                user=student,
-                descriptor=block,
-                depth=0
-            )
-            module = get_module_for_descriptor(
-                user=student,
-                request=get_request(),
-                descriptor=block,
-                field_data_cache=cache,
-                course_key=course_id
-            )
-            _, points_possible = weighted_score(0, module.max_score(), getattr(module, 'weight', None))
-            SCORE_CHANGED.send(
-                sender=None,
-                points_possible=points_possible,
-                points_earned=0,
-                user=student,
-                course_id=course_id,
-                usage_id=module_state_key
-            )
+            _fire_score_changed_for_block(course_id, student, block, module_state_key)
     else:
         _reset_module_attempts(module_to_reset)
 
@@ -313,6 +292,31 @@ def _reset_module_attempts(studentmodule):
     # save
     studentmodule.state = json.dumps(problem_state)
     studentmodule.save()
+
+
+def _fire_score_changed_for_block(course_id, student, block, module_state_key):
+    cache = FieldDataCache.cache_for_descriptor_descendents(
+        course_id=course_id,
+        user=student,
+        descriptor=block,
+        depth=0
+    )
+    module = get_module_for_descriptor(
+        user=student,
+        request=get_request(),
+        descriptor=block,
+        field_data_cache=cache,
+        course_key=course_id
+    )
+    points_earned, points_possible = weighted_score(0, module.max_score(), getattr(module, 'weight', None))
+    SCORE_CHANGED.send(
+        sender=None,
+        points_possible=points_possible,
+        points_earned=points_earned,
+        user=student,
+        course_id=course_id,
+        usage_id=module_state_key
+    )
 
 
 def get_email_params(course, auto_enroll, secure=True, course_key=None, display_name=None):
