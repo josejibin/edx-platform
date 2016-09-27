@@ -1242,19 +1242,16 @@ class CapaModuleTest(unittest.TestCase):
 
         # Check the AJAX call that gets the hint by index
         result = module.get_demand_hint(0)
-        context = module.system.render_template.call_args[0][1]
         self.assertEqual(result['hint_index'], 0)
-        self.assertTrue(context['should_enable_next_hint'])
+        self.assertTrue(result['should_enable_next_hint'])
 
         result = module.get_demand_hint(1)
-        context = module.system.render_template.call_args[0][1]
         self.assertEqual(result['hint_index'], 1)
-        self.assertFalse(context['should_enable_next_hint'])
+        self.assertFalse(result['should_enable_next_hint'])
 
         result = module.get_demand_hint(2)  # here the server wraps around to index 0
-        context = module.system.render_template.call_args[0][1]
         self.assertEqual(result['hint_index'], 0)
-        self.assertTrue(context['should_enable_next_hint'])
+        self.assertTrue(result['should_enable_next_hint'])
 
     def test_demand_hint_logging(self):
         module = CapaFactory.create(xml=self.demand_xml)

@@ -565,6 +565,21 @@ class CapaMixin(CapaFields):
 
         return html
 
+    def _should_enable_demand_hint(self, hint_index, demand_hints):
+        """
+        Should the demand hint option be enabled?
+
+        Arguments:
+            hint_index (int): The current hint index.
+            demand_hints (list): List of hints.
+        Returns:
+            bool: True is the demand hint is possible.
+            bool: True is demand hint should be enabled.
+        """
+        # hint_index is the index of the last hint that will be displayed in this rendering,
+        # so add 1 to check if others exist.
+        return len(demand_hints) > 0, len(demand_hints) > 0 and hint_index + 1 < len(demand_hints)
+
     def get_demand_hint(self, hint_index):
         """
         Return html for the problem, including demand hints.
@@ -606,23 +621,17 @@ class CapaMixin(CapaFields):
         event_info['hint_text'] = get_inner_html_from_xpath(demand_hints[hint_index])
         self.runtime.publish(self, 'edx.problem.hint.demandhint_displayed', event_info)
 
-        # hint_index is the index of the last hint that will be displayed in this rendering,
-        # so add 1 to check if others exist.
-        demand_hint_possible = len(demand_hints) > 0
-        should_enable_next_hint = demand_hint_possible and hint_index + 1 < len(demand_hints)
+        _, should_enable_next_hint = self._should_enable_demand_hint(hint_index, demand_hints)
 
         # We report the index of this hint, the client works out what index to use to get the next hint
         return {
             'success': True,
             'hint_index': hint_index,
-            'more_hints': should_enable_next_hint,
+            'should_enable_next_hint': should_enable_next_hint,
             'msg': total_text,
-            'html': self.get_problem_html(encapsulate=False, hint_index=hint_index)
         }
 
-    def get_problem_html(self, encapsulate=True,
-                         submit_notification=False,
-                         hint_index=0):
+    def get_problem_html(self, encapsulate=True, submit_notification=False, hint_index=0):
         """
         Return html for the problem.
 
@@ -656,8 +665,7 @@ class CapaMixin(CapaFields):
 
         # If demand hints are available, emit hint button and div.
         demand_hints = self.lcp.tree.xpath("//problem/demandhint/hint")
-        demand_hint_possible = len(demand_hints) > 0
-        should_enable_next_hint = demand_hint_possible and hint_index + 1 < len(demand_hints)
+        demand_hint_possible, should_enable_next_hint = self._should_enable_demand_hint(hint_index, demand_hints)
 
         answer_notification_type, answer_notification_message = self._get_answer_notification(
             render_notifications=submit_notification)
@@ -1485,8 +1493,7 @@ class CapaMixin(CapaFields):
             ).format(button_name=self.submit_button_name())
         return {
             'success': True,
-            'msg': msg,
-            'html': self.get_problem_html(encapsulate=False),
+            'msg': msg
         }
 
     def reset_problem(self, _data):

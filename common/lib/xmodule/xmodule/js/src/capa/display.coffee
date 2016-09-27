@@ -37,7 +37,6 @@ class @Problem
     @submitButton.click @submit_fd
     @hintButton = @$('.action .hint-button')
     @hintButton.click @hint_button
-    @hintNotification = @$('.notification-hint')
     @resetButton = @$('.action .reset')
     @resetButton.click @reset
     @showButton = @$('.action .show')
@@ -879,14 +878,12 @@ class @Problem
           MathJax.Hub
           hint_container[0]
         ]
-        @hintNotification.show()
         # Enable/Disable the next hint button
-        if response.more_hints
-          @el.find('.notification-hint .hint-button').removeAttr 'disabled'
+        if response.should_enable_next_hint
           @hintButton.removeAttr 'disabled'
         else
-          @el.find('.notification-hint .hint-button').attr({'disabled': 'disabled'})
           @hintButton.attr({'disabled': 'disabled'})
+        @el.find('.notification-hint').show()
         @focus_on_hint_notification()
       else
         @gentle_alert response.msg
