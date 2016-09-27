@@ -198,7 +198,9 @@ class PersistentGradesTest(ProgressPageBaseTest):
             self.courseware_page.visit()
             staff_page = StaffPage(self.browser, self.course_id)
             self.assertEqual(staff_page.staff_view_mode, 'Staff')
-            staff_debug_page = staff_page.open_staff_debug_info()
+            staff_page.q(css='a.instructor-info-action').nth(1).click()
+            staff_debug_page = StaffDebugPage(self.browser)
+            staff_debug_page.wait_for_page()
             staff_debug_page.delete_state(self.USERNAME)
 
     @ddt.data(
