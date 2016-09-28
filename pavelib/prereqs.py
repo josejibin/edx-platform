@@ -166,6 +166,7 @@ PACKAGES_TO_UNINSTALL = [
     "django-storages",
     "django-oauth2-provider",       # Because now it's called edx-django-oauth2-provider.
     "edx-oauth2-provider",          # Because it moved from github to pypi
+    "pa11ycrawler",                 # Also moved from github to pypi
 ]
 
 
