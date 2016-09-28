@@ -10,6 +10,7 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.core.mail import send_mail
+from django.test.client import RequestFactory
 from django.utils.translation import override as override_language
 
 from course_modes.models import CourseMode
@@ -20,7 +21,6 @@ from edxmako.shortcuts import render_to_string
 from grades.scores import weighted_score
 from grades.signals.signals import SCORE_CHANGED
 from lang_pref import LANGUAGE_KEY
-from request_cache import get_request
 from student.models import CourseEnrollment, CourseEnrollmentAllowed
 from submissions import api as sub_api  # installed from the edx-submissions repository
 from student.models import anonymous_id_for_user
@@ -295,15 +295,25 @@ def _reset_module_attempts(studentmodule):
 
 
 def _fire_score_changed_for_block(course_id, student, block, module_state_key):
+    """
+    Fires a SCORE_CHANGED event for the given module. The earned points are
+    always zero. We must retrieve the possible points from the XModule, as
+    noted below.
+    """
     cache = FieldDataCache.cache_for_descriptor_descendents(
         course_id=course_id,
         user=student,
         descriptor=block,
         depth=0
     )
+    # For implementation reasons, we need to pull the max_score from the XModule, even though the data is not user-
+    # specific.  Here we bind the data to the current user.
+    request = RequestFactory().get('/dummy-collect-max-grade')
+    request.user = student
+    request.session = {}
     module = get_module_for_descriptor(
         user=student,
-        request=get_request(),
+        request=request,
         descriptor=block,
         field_data_cache=cache,
         course_key=course_id
