@@ -2,6 +2,13 @@
 <%page expression_filter="h"/>
 <%namespace name='static' file='static_content.html'/>
 
+## This template should not use the target student's details when masquerading, see TNL-4895
+<%
+original_user = context.get('real_user', None)
+if original_user:
+    user = original_user
+%>
+
 <%!
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext as _
