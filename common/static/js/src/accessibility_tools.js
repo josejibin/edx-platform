@@ -162,15 +162,23 @@ $(function() {
         };
 
         SRAlert.prototype.readElts = function(elts) {
-            var feedback = '';
+            var texts = [];
             $.each(elts, function(idx, value) {
-                return feedback += '<p>' + $(value).html() + '</p>\n';
+                texts.push($(value).html());
             });
-            return this.el.html(feedback);
+            return this.readTexts(texts);
         };
 
         SRAlert.prototype.readText = function(text) {
-            return this.el.text(text);
+            return this.readTexts([text]);
+        };
+        
+        SRAlert.prototype.readTexts = function(texts) {
+            var feedback = '';
+            $.each(texts, function(idx, value) {
+                return feedback += '<p>' + value + '</p>\n';
+            });
+            return this.el.html(feedback);
         };
 
         return SRAlert;

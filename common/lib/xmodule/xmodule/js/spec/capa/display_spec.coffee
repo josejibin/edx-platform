@@ -9,8 +9,8 @@ describe 'Problem', ->
     @stubbedJax = root: jasmine.createSpyObj('jax.root', ['toMathML'])
     MathJax.Hub.getAllJax.and.returnValue [@stubbedJax]
     window.update_schematics = ->
-    spyOn SR, 'readElts'
     spyOn SR, 'readText'
+    spyOn SR, 'readTexts'
 
     # Load this function from spec/helper.coffee
     # Note that if your test fails with a message like:
@@ -207,25 +207,28 @@ describe 'Problem', ->
 
     describe 'when the response is correct', ->
       it 'call render with returned content', ->
+        contents = '<section aria-label="Question 1"><p>Correct<span class="status">excellent</span></p></section>' +
+                   '<section aria-label="Question 2"><p>Yep<span class="status">correct</span></p></section>'
         spyOn($, 'postWithPrefix').and.callFake (url, answers, callback) ->
-          callback(success: 'correct', contents: 'Correct')
+          callback(success: 'correct', contents: contents)
           promise =
             always: (callable) -> callable()
             done: (callable) -> callable()
         @problem.submit()
-        expect(@problem.el.html()).toEqual 'Correct'
-        expect(window.SR.readElts).toHaveBeenCalled()
+        expect(@problem.el).toHaveHtml contents
+        expect(window.SR.readTexts).toHaveBeenCalledWith ['Question 1: excellent', 'Question 2: correct']
 
     describe 'when the response is incorrect', ->
       it 'call render with returned content', ->
+        contents = '<p>Incorrect<span class="status">no, try again</span></p>'
         spyOn($, 'postWithPrefix').and.callFake (url, answers, callback) ->
-          callback(success: 'incorrect', contents: 'Incorrect')
+          callback(success: 'incorrect', contents: contents)
           promise =
             always: (callable) -> callable()
             done: (callable) -> callable()
         @problem.submit()
-        expect(@problem.el.html()).toEqual 'Incorrect'
-        expect(window.SR.readElts).toHaveBeenCalled()
+        expect(@problem.el).toHaveHtml contents
+        expect(window.SR.readTexts).toHaveBeenCalledWith ['no, try again']
 
     it 'tests if all the capa buttons are disabled while submitting', (done)->
       deferred = $.Deferred()
@@ -452,7 +455,7 @@ describe 'Problem', ->
       it 'sends a message to the window SR element', ->
         spyOn($, 'postWithPrefix').and.callFake (url, callback) -> callback(answers: {})
         @problem.show()
-        expect(window.SR.readElts).toHaveBeenCalledWith 'The answer to the problem has been shown. Navigate through the problem to read the answer text.'
+        expect(window.SR.readText).toHaveBeenCalledWith 'The answer to the problem has been shown. Navigate through the problem to read the answer text.'
 
       it 'add the showed class to element', ->
         spyOn($, 'postWithPrefix').and.callFake (url, callback) -> callback(answers: {})
@@ -460,7 +463,7 @@ describe 'Problem', ->
         expect(@problem.el).toHaveClass 'showed'
         expect(@problem.el.find('.show').attr('disabled')).toEqual('disabled')
 
-      it 'reads the answers', (done) ->
+      it 'sends a SR message when answer is present', (done) ->
         deferred = $.Deferred()
 
         runs = ->
@@ -473,7 +476,7 @@ describe 'Problem', ->
           deferred.promise()
 
         runs.call(this).then(->
-          expect(window.SR.readElts).toHaveBeenCalled()
+          expect(window.SR.readText).toHaveBeenCalledWith 'The answer to the problem has been shown. Navigate through the problem to read the answer text.'
           return
         ).always done
 

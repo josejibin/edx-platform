@@ -366,7 +366,7 @@ class @Problem
     $.postWithPrefix "#{@url}/problem_check", @answers, (response) =>
       switch response.success
         when 'incorrect', 'correct'
-          window.SR.readElts($(response.contents).find('.status'))
+          window.SR.readTexts(@get_sr_status(response.contents))
           @el.trigger('contentChanged', [@id, response.contents])
           @render(response.contents, @focus_on_submit_notification)
           @updateProgress response
@@ -377,6 +377,24 @@ class @Problem
           @gentle_alert response.success
       Logger.log 'problem_graded', [@answers, response.contents], @id
 
+  get_sr_status: (contents) =>
+    status_elements = $(contents).find('.status')
+    labeled_status = []
+    for element in status_elements
+      parent_section = element.closest('section')
+      aria_label = null
+      if parent_section
+        aria_label = parent_section.getAttribute('aria-label')
+        if aria_label
+          `// Translators: This is only translated to allow for reording of label and associated status.`
+          template = gettext("%(label)s: %(status)s")
+          labeled_status.push(interpolate(template, {'label': aria_label, 'status': $(element).text()}, true))
+
+      if not aria_label
+        labeled_status.push($(element).text())
+
+    return labeled_status
+  
   reset: =>
     @disableAllButtonsWhileRunning @reset_internal, false
 
@@ -434,7 +452,7 @@ class @Problem
         @el.addClass 'showed'
         @el.find('.show').attr('disabled', 'disabled')
         @updateProgress response
-        window.SR.readElts(gettext('The answer to the problem has been shown. Navigate through the problem to read the answer text.'))
+        window.SR.readText(gettext('The answer to the problem has been shown. Navigate through the problem to read the answer text.'))
         @scroll_to_problem_meta()
 
   clear_all_notifications: =>
