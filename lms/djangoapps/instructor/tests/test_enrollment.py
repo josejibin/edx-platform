@@ -17,7 +17,8 @@ from ccx_keys.locator import CCXLocator
 from student.tests.factories import UserFactory
 from xmodule.modulestore.tests.factories import CourseFactory, ItemFactory
 
-from grades.new.subsection_grade import SubsectionGrade, SubsectionGradeFactory
+from grades.new.subsection_grade import SubsectionGradeFactory
+from grades.tests.utils import answer_problem
 from lms.djangoapps.ccx.tests.factories import CcxFactory
 from lms.djangoapps.course_blocks.api import get_course_blocks
 from openedx.core.djangolib.testing.utils import CacheIsolationTestCase
@@ -528,37 +529,27 @@ class TestStudentModuleGrading(SharedModuleStoreTestCase):
             category="problem",
             display_name="Test Problem"
         )
-        cls.user = UserFactory()
+        cls.request = get_request_for_user(UserFactory())
+        cls.user = cls.request.user
 
-    def test_delete_student_state(self):
-        problem_location = self.problem.location
-        # Create a student module for the user
-        StudentModule.objects.create(
-            student=self.user,
-            course_id=self.course_key,
-            module_state_key=problem_location,
-            state=json.dumps({})
-        )
-
-        # Create a submission and score for the student using the submissions API
-        student_item = {
-            'student_id': anonymous_id_for_user(self.user, self.course_key),
-            'course_id': self.course_key.to_deprecated_string(),
-            'item_id': problem_location.to_deprecated_string(),
-            'item_type': 'openassessment'
-        }
-        submission = sub_api.create_submission(student_item, 'test answer')
-        sub_api.set_score(submission['uuid'], 1, 2)
+    def _get_subsection_grade_and_verify(self, all_earned, graded_earned, all_possible, graded_possible):
         subsection_grade_factory = SubsectionGradeFactory(
             self.user,
             self.course,
             get_course_blocks(self.user, self.course.location)
         )
-        grade = subsection_grade_factory.create(self.sequence)
-        self.assertEqual(grade.all_total.earned, 1)
-        self.assertEqual(grade.graded_total.earned, 1)
-        self.assertEqual(grade.all_total.possible, 2)
-        self.assertEqual(grade.graded_total.possible, 2)
+        grade = subsection_grade_factory.update(self.sequence)
+        self.assertEqual(grade.all_total.earned, all_earned)
+        self.assertEqual(grade.graded_total.earned, graded_earned)
+        self.assertEqual(grade.all_total.possible, all_possible)
+        self.assertEqual(grade.graded_total.possible, graded_possible)
+
+    @patch('crum.get_current_request')
+    def test_delete_student_state(self, _crum_mock):
+        problem_location = self.problem.location
+        self._get_subsection_grade_and_verify(0, 0, 0, 0)
+        answer_problem(course=self.course, request=self.request, problem=self.problem, score=1, max_value=2)
+        self._get_subsection_grade_and_verify(1, 1, 2, 2)
 
         # Delete student state using the instructor dash
         reset_student_attempts(
@@ -568,22 +559,8 @@ class TestStudentModuleGrading(SharedModuleStoreTestCase):
             requesting_user=self.user,
             delete_module=True,
         )
-
-        # Verify that the student's scores have been reset in the submissions API
-        score = sub_api.get_score(student_item)
-        self.assertIs(score, None)
         # Verify that the student's grades are reset
-        subsection_grade_factory = SubsectionGradeFactory(
-            self.user,
-            self.course,
-            get_course_blocks(self.user, self.course.location)
-        )
-        grade = subsection_grade_factory.create(self.sequence)
-        self.assertEqual(grade.all_total.earned, 0)
-        self.assertEqual(grade.graded_total.earned, 0)
-        self.assertEqual(grade.all_total.possible, 0)
-        self.assertEqual(grade.graded_total.possible, 0)
-
+        self._get_subsection_grade_and_verify(0, 0, 0, 0)
 
 
 class EnrollmentObjects(object):

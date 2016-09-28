@@ -244,7 +244,6 @@ class PersistentGradesTest(ProgressPageBaseTest):
             self.assertEqual(self._get_problem_scores(), [(1, 1), (0, 1)])
             self.assertEqual(self._get_section_score(), (1, 2))
 
-    @skip
     def test_progress_page_updates_when_student_state_deleted(self):
         self._check_progress_page_with_scored_problem()
         self._delete_student_state_for_problem()

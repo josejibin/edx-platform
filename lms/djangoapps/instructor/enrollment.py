@@ -4,6 +4,7 @@ Enrollment operations for use by instructor APIs.
 Does not include any access control, be sure to check access before calling.
 """
 
+import crum
 import json
 import logging
 from django.contrib.auth.models import User
@@ -308,9 +309,7 @@ def _fire_score_changed_for_block(course_id, student, block, module_state_key):
     )
     # For implementation reasons, we need to pull the max_score from the XModule, even though the data is not user-
     # specific.  Here we bind the data to the current user.
-    request = RequestFactory().get('/dummy-collect-max-grade')
-    request.user = student
-    request.session = {}
+    request = crum.get_current_request()
     module = get_module_for_descriptor(
         user=student,
         request=request,

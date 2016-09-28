@@ -157,7 +157,7 @@ def _get_score_from_csm(csm_scores, block, weight):
     if has_valid_score:
         raw_earned = score.correct if score.correct is not None else 0.0
         raw_possible = score.total
-        return (raw_earned, raw_possible) + _weighted_score(raw_earned, raw_possible, weight)
+        return (raw_earned, raw_possible) + weighted_score(raw_earned, raw_possible, weight)
 
 
 def _get_score_from_persisted_or_latest_block(persisted_block, block, weight):
@@ -174,7 +174,7 @@ def _get_score_from_persisted_or_latest_block(persisted_block, block, weight):
     else:
         raw_possible = block.transformer_data[GradesTransformer].max_score
 
-    return (raw_earned, raw_possible) + _weighted_score(raw_earned, raw_possible, weight)
+    return (raw_earned, raw_possible) + weighted_score(raw_earned, raw_possible, weight)
 
 
 def _get_weight_from_block(persisted_block, block):
@@ -216,7 +216,7 @@ def _get_explicit_graded(block):
     return True if field_value is None else field_value
 
 
-def _weighted_score(raw_earned, raw_possible, weight):
+def weighted_score(raw_earned, raw_possible, weight):
     """
     Returns a tuple that represents the weighted (earned, possible) score.
     If weight is None or raw_possible is 0, returns the original values.
