@@ -39,15 +39,14 @@ from django.utils.http import urlquote_plus
     <div class="container">
         <div class="profile-wrapper">
             <section class="course-info" id="course-info-progress">
-                <h3 class="hd hd-3 progress-certificates-title">
-                    ${_("Course Progress for Student '{username}' ({email})").format(username=student.username, email=student.email) | h}
-                </h3>
-
                 % if staff_access and studio_url is not None:
                 <div class="wrap-instructor-info">
                     <a class="instructor-info-action studio-view" href="${studio_url | h}">${_("View Grading in studio")}</a>
                 </div>
                 % endif
+                <h3 class="hd hd-3 progress-certificates-title">
+                    ${_("Course Progress for Student '{username}' ({email})").format(username=student.username, email=student.email) | h}
+                </h3>
 
                 %if certificate_data:
                 <div class="wrapper-msg wrapper-auto-cert">
@@ -62,7 +61,7 @@ from django.utils.http import urlquote_plus
                             </div>
                             <div class="msg-actions">
                                 %if certificate_data.cert_web_view_url:
-                                <a class="btn" href="${certificate_data.cert_web_view_url | h}">${_("View Certificate")}</a>
+                                <a class="btn" href="${certificate_data.cert_web_view_url | h}" target="_blank">${_("View Certificate")} <span class="sr">Opens in a new browser window</span></a>
                                 %elif certificate_data.cert_status == CertificateStatuses.downloadable and certificate_data.download_url:
                                 <a class="btn" href="${certificate_data.download_url | h}">${_("Download Your Certificate")}</a>
                                 %elif certificate_data.cert_status == CertificateStatuses.requesting:
