@@ -394,14 +394,12 @@ class @Problem
   show: =>
     if !@el.hasClass 'showed'
       Logger.log 'problem_show', problem: @id
-      answer_text = []
       $.postWithPrefix "#{@url}/problem_show", (response) =>
         answers = response.answers
         $.each answers, (key, value) =>
           if $.isArray(value)
             for choice in value
               @$("label[for='input_#{key}_#{choice}']").attr correct_answer: 'true'
-              answer_text.push('<p>' + gettext('Answer:') + ' ' + value + '</p>')
           else
             answer = @$("#answer_#{key}, #solution_#{key}")
             answer.html(value)
@@ -418,10 +416,6 @@ class @Problem
                 solution = $(value).find('.detailed-solution')
             catch e
                 solution = {}
-            if solution.length
-              answer_text.push(solution)
-            else
-              answer_text.push('<p>' + gettext('Answer:') + ' ' + value + '</p>')
 
         # TODO remove the above once everything is extracted into its own
         # inputtype functions.
@@ -440,7 +434,7 @@ class @Problem
         @el.addClass 'showed'
         @el.find('.show').attr('disabled', 'disabled')
         @updateProgress response
-        window.SR.readElts(answer_text)
+        window.SR.readElts(gettext('The answer to the problem has been shown. Navigate through the problem to read the answer text.'))
         @scroll_to_problem_meta()
 
   clear_all_notifications: =>

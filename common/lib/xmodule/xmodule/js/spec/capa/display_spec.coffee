@@ -449,22 +449,10 @@ describe 'Problem', ->
         expect($('#answer_1_1')).toHaveHtml 'One'
         expect($('#answer_1_2')).toHaveHtml 'Two'
 
-      it 'sends the answers when text to the SR element', ->
+      it 'sends a message to the window SR element', ->
         spyOn($, 'postWithPrefix').and.callFake (url, callback) -> callback(answers: {})
         @problem.show()
-        expect(window.SR.readElts).toHaveBeenCalled()
-
-      it 'sends the answers when elements to the SR element, answers are strings', ->
-        spyOn($, 'postWithPrefix').and.callFake (url, callback) -> callback(answers: '1_1': 'One', '1_2': 'Two')
-        @problem.show()
-        expect(window.SR.readElts).toHaveBeenCalledWith ['<p>Answer: One</p>', '<p>Answer: Two</p>']
-
-      it 'sends the answers when elements to the SR element, answers are elements', ->
-        answer1 = '<div><span class="detailed-solution">one</span></div>'
-        answer2 = '<div><span class="detailed-solution">two</span></div>'
-        spyOn($, 'postWithPrefix').and.callFake (url, callback) -> callback(answers: '1_1': answer1, '1_2': answer2)
-        @problem.show()
-        expect(window.SR.readElts).toHaveBeenCalledWith [jasmine.any(jQuery), jasmine.any(jQuery)]
+        expect(window.SR.readElts).toHaveBeenCalledWith 'The answer to the problem has been shown. Navigate through the problem to read the answer text.'
 
       it 'add the showed class to element', ->
         spyOn($, 'postWithPrefix').and.callFake (url, callback) -> callback(answers: {})
