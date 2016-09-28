@@ -142,7 +142,7 @@ class @Problem
       # If queueing status changed, then render
       @new_queued_items = $(response.html).find(".xqueue")
       if @new_queued_items.length isnt @num_queued_items
-        @el.html(response.html).promise().done =>
+        edx.HtmlUtils.setHtml(@el, edx.HtmlUtils.HTML(response.html)).promise().done =>
           focus_callback?()
         JavascriptLoader.executeModuleScripts @el, () =>
           @setupInputTypes()
@@ -404,7 +404,7 @@ class @Problem
               answer_text.push('<p>' + gettext('Answer:') + ' ' + value + '</p>')
           else
             answer = @$("#answer_#{key}, #solution_#{key}")
-            answer.html(value)
+            edx.HtmlUtils.setHtml(answer, edx.HtmlUtils.HTML(value))
             Collapsible.setCollapsibles(answer)
 
             # Sometimes, `value` is just a string containing a MathJax formula.
@@ -445,10 +445,11 @@ class @Problem
 
   clear_all_notifications: =>
     @submitNotification.remove()
+    @gentleAlertNotification.hide()
     @saveNotification.hide()
 
   gentle_alert: (msg) =>
-    @el.find('.notification-gentle-alert .notification-message').html(msg)
+    edx.HtmlUtils.setHtml(@el.find('.notification-gentle-alert .notification-message'), edx.HtmlUtils.HTML(msg))
     @clear_all_notifications()
     @gentleAlertNotification.show()
     @gentleAlertNotification.focus()
@@ -463,7 +464,7 @@ class @Problem
       saveMessage = response.msg
       if response.success
         @el.trigger('contentChanged', [@id, response.html])
-        @el.find('.notification-save .notification-message').html(saveMessage)
+        edx.HtmlUtils.setHtml(@el.find('.notification-save .notification-message'), edx.HtmlUtils.HTML(saveMessage))
         @clear_all_notifications()
         @saveNotification.show()
         @focus_on_save_notification()
@@ -871,7 +872,7 @@ class @Problem
       if response.success
         hint_msg_container = @.$('.problem-hint .notification-message')
         hint_container.attr('hint_index', response.hint_index)
-        hint_msg_container.html(response.msg)
+        edx.HtmlUtils.setHtml(hint_msg_container, edx.HtmlUtils.HTML(response.msg))
         # Update any Mathjax entries
         MathJax.Hub.Queue [
           'Typeset'
