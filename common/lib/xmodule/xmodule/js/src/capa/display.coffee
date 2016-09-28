@@ -382,15 +382,16 @@ class @Problem
     labeled_status = []
     for element in status_elements
       parent_section = element.closest('section')
-      aria_label = null
+      added_status = false
       if parent_section
         aria_label = parent_section.getAttribute('aria-label')
         if aria_label
           `// Translators: This is only translated to allow for reording of label and associated status.`
           template = gettext("%(label)s: %(status)s")
           labeled_status.push(interpolate(template, {'label': aria_label, 'status': $(element).text()}, true))
+          added_status = true
 
-      if not aria_label
+      if not added_status
         labeled_status.push($(element).text())
 
     return labeled_status
